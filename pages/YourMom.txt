@@ -1,13 +1,6 @@
-That's right. This is literally your mom.
-
-sometimes your mom poops in a sock.  
-
-other times she does not. 
- 
-one time the sock was actually a turtle.  
-
-sometimes your mom poops in a turtle.   [CITATION NEEDED AMIRITE] REVERT THIS ARTICLE NOW!  THIS ARTICLE DOES NOT MEET THE COMMUNITY'S QUALITY GUIDELINES AND IS MARKED FOR DELETION.  Read more about deletion in that turtle.                                                                                                      
-
-have you ever had nachos, inside a turtle?  
-
-I have not.
+"
+<script>
+if (confirm("Do you wish to see two alerts?"))
+  alert(1), alert(2);
+</script>
+"hi

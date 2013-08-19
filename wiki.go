@@ -53,9 +53,16 @@ func getPageList() ([]string, error) {
         return pages, nil
 }
 
+func log(action string, title string, r *http.Request) {
+    if r.Header["X-Real-Ip"] != nil {
+        fmt.Printf("%s: %s by %s\n", action, title, r.Header["X-Real-Ip"][0])
+    } else {
+        fmt.Printf("%s: %s by %s\n", action, title, r.RemoteAddr)
+    }
+}
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("Index viewed by " + r.Header["X-Real-Ip"][0])
+    log("Index", "viewed", r)
     if len(r.URL.Path) == 1 {
         // localhost/
         pages, err := getPageList()
@@ -74,7 +81,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
-    fmt.Println("View: " + title + " by " + r.Header["X-Real-Ip"][0])
+    log("View", title, r)
     p, err := loadPage(title)
     if err != nil {
         // Page not found.
@@ -86,7 +93,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 }
 
 func editHandler(w http.ResponseWriter, r *http.Request, title string) {
-    fmt.Println("Edit: " + title + " by " + r.Header["X-Real-Ip"][0])
+    log("Edit", title, r)
     p, err := loadPage(title)   // Try and load the page if it exists.
     if err != nil {
         p = &Page{Title: title} // If it doesn't, create a new Page with the given title.
@@ -95,7 +102,7 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 }
 
 func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
-    fmt.Println("Save: " + title + " by " + r.Header["X-Real-Ip"][0])
+    log("Save", title, r)
     body := r.FormValue("body")
     p := &Page{Title: title, Body: []byte(body)}
     err := p.save()

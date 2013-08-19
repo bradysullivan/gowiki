@@ -1,6 +1,6 @@
 # Custom
-*.swp # Vim swap files.
-
+.*.swp # Vim swap files.
+.*.go.swp
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o

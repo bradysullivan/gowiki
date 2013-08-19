@@ -5,11 +5,12 @@ import (
     "io/ioutil"
     "regexp"
     "net/http"
+    "strings"
 )
 
 const lenPath = len("/view/")
 
-var templates = template.Must(template.ParseFiles("templates/edit.html", "templates/view.html", "templates/notfound.html"))
+var templates = template.Must(template.ParseFiles("templates/index.html", "templates/edit.html", "templates/view.html", "templates/notfound.html"))
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 type Page struct {
@@ -36,6 +37,37 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
     err := templates.ExecuteTemplate(w, tmpl, p)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+}
+
+func getPageList() ([]string, error) {
+        files, err := ioutil.ReadDir("pages")
+        if err != nil {
+            return nil, err
+        }
+        pages := make([]string, len(files))
+        for i, p := range files {
+            pages[i] = strings.Replace(p.Name(), ".txt", "", 1)
+        }
+        return pages, nil
+}
+
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+    if len(r.URL.Path) == 1 {
+        // localhost/
+        pages, err := getPageList()
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        err = templates.ExecuteTemplate(w, "index.html", pages)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+    } else {
+        http.Redirect(w, r, "/", http.StatusFound)
     }
 }
 
@@ -81,6 +113,7 @@ func makeHandler( fn func (http.ResponseWriter, *http.Request, string)) http.Han
 }
 
 func main() {
+    http.HandleFunc("/", rootHandler)
     http.HandleFunc("/view/", makeHandler(viewHandler))
     http.HandleFunc("/edit/", makeHandler(editHandler))
     http.HandleFunc("/save/", makeHandler(saveHandler))

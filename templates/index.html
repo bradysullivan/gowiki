@@ -1,8 +1,17 @@
 {{template "header.html"}}
-
-<h1>GoWiki Index</h1>
-<div>
-    {{range .}}<p><a href="view/{{.}}">{{.}}</a></p>{{end}}
+<div class="hero-unit">
+    <h1>GoWiki!</h1>
+    <p>OMG guys, I wrote this in Golang. Chiggity check it out. <a href="https://github.com/CaptSullivan/gowiki" class="btn btn-large btn-success">Github Repo</a>
 </div>
-
+<div class="row">
+    <div class="span4">
+        <ul class="nav nav-list">
+            <li class="nav-header">Index</li>
+            {{range .}}<li><a href="view/{{.}}">{{.}}</a></li>{{end}}
+        </ul>
+    </div>
+    <div class="span8">
+        So yeah, click a link, edit it, or create something new!
+    </div>
+</div>
 {{template "footer.html"}}

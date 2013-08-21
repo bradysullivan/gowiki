@@ -11,8 +11,9 @@ import (
 
 const lenPath = len("/view/")
 
-var templates = template.Must(template.ParseFiles("templates/index.html", "templates/edit.html", 
-                                                  "templates/view.html", "templates/notfound.html")) 
+var templates = template.Must(template.ParseFiles("templates/index.html", "templates/edit.html",
+                                                  "templates/view.html", "templates/notfound.html",
+                                                  "templates/header.html", "templates/footer.html"))
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 type Page struct {
@@ -125,10 +126,22 @@ func makeHandler( fn func (http.ResponseWriter, *http.Request, string)) http.Han
     }
 }
 
+func includeHandler(w http.ResponseWriter, r *http.Request) {
+    filename := r.URL.Path[1:]
+    file, err := ioutil.ReadFile(filename)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusNotFound)
+        return
+    }
+    fmt.Fprintf(w, string(file))
+}
+
 func main() {
     http.HandleFunc("/", rootHandler)
     http.HandleFunc("/view/", makeHandler(viewHandler))
     http.HandleFunc("/edit/", makeHandler(editHandler))
     http.HandleFunc("/save/", makeHandler(saveHandler))
+    http.HandleFunc("/js/", includeHandler)
+    http.HandleFunc("/css/", includeHandler)
     http.ListenAndServe(":54545", nil)
 }

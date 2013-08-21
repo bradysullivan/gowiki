@@ -127,13 +127,13 @@ func makeHandler( fn func (http.ResponseWriter, *http.Request, string)) http.Han
 }
 
 func includeHandler(w http.ResponseWriter, r *http.Request) {
-    filename := r.URL.Path[1:]
+    filename := r.URL.Path[1:]/*
     file, err := ioutil.ReadFile(filename)
     if err != nil {
         http.Error(w, err.Error(), http.StatusNotFound)
         return
-    }
-    fmt.Fprintf(w, "%s", string(file))
+    }*/
+    http.ServeFile(w, r, filename)
 }
 
 func main() {

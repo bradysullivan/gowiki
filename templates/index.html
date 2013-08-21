@@ -1,4 +1,8 @@
+{{template "header.html"}}
+
 <h1>GoWiki Index</h1>
 <div>
     {{range .}}<p><a href="view/{{.}}">{{.}}</a></p>{{end}}
 </div>
+
+{{template "footer.html"}}

@@ -11,7 +11,8 @@ import (
 
 const lenPath = len("/view/")
 
-var templates = template.Must(template.ParseFiles("templates/index.html", "templates/edit.html", "templates/view.html", "templates/notfound.html"))
+var templates = template.Must(template.ParseFiles("templates/index.html", "templates/edit.html", 
+                                                  "templates/view.html", "templates/notfound.html")) 
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 type Page struct {

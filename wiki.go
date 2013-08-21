@@ -133,7 +133,7 @@ func includeHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusNotFound)
         return
     }
-    fmt.Fprintf(w, string(file))
+    fmt.Fprintf(w, "%s", string(file))
 }
 
 func main() {

@@ -1,6 +1,0 @@
-"
-<script>
-if (confirm("Do you wish to see two alerts?"))
-  alert(1), alert(2);
-</script>
-"hi

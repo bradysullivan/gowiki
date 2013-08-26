@@ -2,11 +2,12 @@ package main
 
 import (
     "html/template"
-    "io/ioutil"
     "regexp"
     "net/http"
     "fmt"
     "strings"
+    "labix.org/v2/mgo"
+    "labix.org/v2/mgo/bson"
 )
 
 const lenPath = len("/view/")
@@ -15,24 +16,25 @@ var templates = template.Must(template.ParseFiles("templates/index.html", "templ
                                                   "templates/view.html", "templates/notfound.html",
                                                   "templates/header.html", "templates/footer.html"))
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
+var db *mgo.Collection
 
 type Page struct {
     Title string
+    Perma string
     Body []byte
 }
 
 func (p *Page) save() error {
-    filename := "pages/" + p.Title + ".txt"
-    return ioutil.WriteFile(filename, p.Body, 0600)
+    fmt.Println("Updating existing page.")
+    _, err := db.Upsert(bson.M{"perma":p.Perma}, p)
+    return err
 }
 
 func loadPage(title string) (*Page, error) {
-    filename := "pages/" + title + ".txt"
-    body, err := ioutil.ReadFile(filename)
-    if err != nil {
-        return nil, err
-    }
-    return &Page{Title: title, Body:body}, nil
+    search := strings.ToLower(title)
+    result := Page{}
+    err := db.Find(bson.M{"perma":search}).One(&result)
+    return &result, err
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
@@ -44,15 +46,18 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 }
 
 func getPageList() ([]string, error) {
-        files, err := ioutil.ReadDir("pages")
-        if err != nil {
-            return nil, err
-        }
-        pages := make([]string, len(files))
-        for i, p := range files {
-            pages[i] = strings.Replace(p.Name(), ".txt", "", 1)
-        }
-        return pages, nil
+    pages := []Page{}
+    query := db.Find(nil).Limit(100).Iter()
+    err := query.All(&pages)
+    if err != nil {
+        return nil, err
+    }
+
+    titles := make([]string, len(pages))
+    for i, p := range pages {
+        titles[i] = p.Title
+    }
+    return titles, nil
 }
 
 func log(action string, title string, r *http.Request) {
@@ -66,7 +71,7 @@ func log(action string, title string, r *http.Request) {
 func rootHandler(w http.ResponseWriter, r *http.Request) {
     log("Index", "viewed", r)
     if len(r.URL.Path) == 1 {
-        // localhost/
+        // asked for root dir.
         pages, err := getPageList()
         if err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -77,7 +82,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
-    } else {
+    } else { // Didn't ask for root, but we'll give it to them anyways.
         http.Redirect(w, r, "/", http.StatusFound)
     }
 }
@@ -86,6 +91,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
     log("View", title, r)
     p, err := loadPage(title)
     if err != nil {
+        fmt.Println(err.Error())
         // Page not found.
         renderTemplate(w, "notfound", &Page{Title:title})
     } else {
@@ -106,9 +112,10 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
     log("Save", title, r)
     body := r.FormValue("body")
-    p := &Page{Title: title, Body: []byte(body)}
+    p := &Page{Title: title, Body: []byte(body), Perma: strings.ToLower(title)}
     err := p.save()
     if err != nil {
+        fmt.Println(err.Error())
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
@@ -127,16 +134,19 @@ func makeHandler( fn func (http.ResponseWriter, *http.Request, string)) http.Han
 }
 
 func includeHandler(w http.ResponseWriter, r *http.Request) {
-    filename := r.URL.Path[1:]/*
-    file, err := ioutil.ReadFile(filename)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusNotFound)
-        return
-    }*/
+    filename := r.URL.Path[1:]
     http.ServeFile(w, r, filename)
 }
 
 func main() {
+    session, err := mgo.Dial("localhost")
+    if err != nil {
+        panic(err)
+    }
+    defer session.Close()
+    session.SetSafe(&mgo.Safe{})
+    db = session.DB("gowiki").C("pages")
+    //db.DropCollection() // Used for debug reasons.
     http.HandleFunc("/", rootHandler)
     http.HandleFunc("/view/", makeHandler(viewHandler))
     http.HandleFunc("/edit/", makeHandler(editHandler))

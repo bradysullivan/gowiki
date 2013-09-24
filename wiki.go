@@ -60,11 +60,11 @@ func getPageList() ([]string, error) {
     return titles, nil
 }
 
-func log(action string, title string, r *http.Request) {
+func log(title string, action string, r *http.Request) {
     if r.Header["X-Real-Ip"] != nil {
-        fmt.Printf("%s: %s by %s\n", action, title, r.Header["X-Real-Ip"][0])
+        fmt.Printf("%s: %s by %s\n", title, action, r.Header["X-Real-Ip"][0])
     } else {
-        fmt.Printf("%s: %s by %s\n", action, title, r.RemoteAddr)
+        fmt.Printf("%s: %s by %s\n", title, action, r.RemoteAddr)
     }
 }
 
